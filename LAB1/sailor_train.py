@@ -7,10 +7,10 @@ from multiprocessing import Process, Pool
 
 number_of_episodes = 500  # number of training epizodes (multi-stage processes)
 
-# file_name = 'map_small.txt' #best score: [0.8, 0.4, 0.3, 2.2895]
+file_name = 'map_small.txt'  # best score: [0.8, 0.4, 0.3, 2.329]
 # file_name = 'map_easy.txt' # best score: [0.9, 0.2, 0.5, 6.692]
 # file_name = 'map_middle.txt' # best score: [0.9, 0.2, 0.3, 6.9355]
-file_name = 'map_big.txt' # best score: [0.7, 0.5, 0.4, -1.3065]
+# file_name = 'map_big.txt'  # best score: [0.7, 0.5, 0.4, -1.3065]
 # file_name = 'map_spiral.txt' # best score: [0.9, 0.2, 0.6, 178.7605]
 
 reward_map = sf.load_data(file_name)
@@ -47,7 +47,7 @@ def train(arguments):
     score = sf.sailor_test(reward_map, Q, 1000)
 
     # print(f"gamma: {gamma} alfa: {alfa} epsilon: {epsilon} score: {score}")
-    print('.')
+    # print('.')
     return [gamma, alfa, epsilon, score]
 
 
@@ -57,21 +57,31 @@ def test(arguments):
 
 
 if __name__ == '__main__':
-    values = []
-    for gamma in np.arange(0.6, 1, 0.05):
-        for alfa in np.arange(0.2, 0.6, 0.05):
-            for epsilon in np.arange(0.3, 0.7, 0.05):
-                values.append([gamma, alfa, epsilon])
+    # TEST 1 - dobór parametrów
+    # values = []
+    # for gamma in np.arange(0.6, 1, 0.05):
+    #     for alfa in np.arange(0.2, 0.6, 0.05):
+    #         for epsilon in np.arange(0.3, 0.7, 0.05):
+    #             values.append([gamma, alfa, epsilon])
+    #
+    # with Pool(12) as pool:
+    #     scores = [pool.map(train, values)]
+    #
+    # best = [-1, -1, -1, -100]
+    # for score in scores[0]:
+    #     if score[3] > best[3]:
+    #         best = score
+    #
+    # print(f"best score: {str(best)}")
 
-    with Pool(12) as pool:
-        scores = [pool.map(train, values)]
-
+    #     TEST2 - test wybranych parametrów
     best = [-1, -1, -1, -100]
-    for score in scores[0]:
+    for i in range(500):
+        score = train([0.8, 0.4, 0.3])
         if score[3] > best[3]:
             best = score
-
-    print(f"best score: {str(best)}")
+        print(i)
+    print(best)
 
 # W tym miejscu mozna uzyc kodu z funkcji sailor_test()
 

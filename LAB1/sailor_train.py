@@ -37,9 +37,7 @@ def train(arguments):
                 action = strategy[state[0], state[1]]
 
             state_next, reward = environment(state, action, reward_map);
-            Q[state[0], state[1], action - 1] += alfa * (
-                    reward + gamma * max(Q[state_next[0], state_next[1], :]) - Q[
-                state[0], state[1], action - 1])
+            Q[state[0], state[1], action - 1] += alfa * (reward + gamma * max(Q[state_next[0], state_next[1], :]))
             state = state_next
 
             if state[1] >= num_of_columns - 1:

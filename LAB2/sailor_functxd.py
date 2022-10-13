@@ -1,8 +1,10 @@
-import copy
 import time
 import os
 import pdb
 import numpy as np
+import matplotlib
+
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
@@ -37,40 +39,6 @@ def load_data(file_name):
     return map_of_rew
 
 
-def calculate_reward(state, action, reward_map):
-    num_of_rows, num_of_columns = reward_map.shape
-    wall_colid_reward = -1.5
-    state_new = copy.deepcopy(state)
-    reward = 0
-
-    if action == 1:
-        if state[1] < num_of_columns - 1:
-            state_new[1] += 1
-            reward += reward_map[state_new[0], state_new[1]]
-        else:
-            reward += wall_colid_reward
-    elif action == 2:
-        if state[0] > 0:
-            state_new[0] -= 1
-            reward += reward_map[state_new[0], state_new[1]]
-        else:
-            reward += wall_colid_reward
-    if action == 3:
-        if state[1] > 0:
-            state_new[1] -= 1
-            reward += reward_map[state_new[0], state_new[1]]
-        else:
-            reward += wall_colid_reward
-    elif action == 4:
-        if state[0] < num_of_rows - 1:
-            state_new[0] += 1
-            reward += reward_map[state_new[0], state_new[1]]
-        else:
-            reward += wall_colid_reward
-
-    return reward
-
-
 def environment(state, action, reward_map):
     num_of_rows, num_of_columns = reward_map.shape
     prob_side = 0.15
@@ -81,45 +49,61 @@ def environment(state, action, reward_map):
     reward = 0
 
     los = np.random.random()  # Random number from uniform distr. from range (0,1)
-
+    probability = 0
     # Action values (1 - right, 2 - up, 3 - left, 4 - bottom):
     action_exe = -1
     if action == 1:
         if los < prob_back:
             action_exe = 3
+            probability = prob_back
         elif los < prob_back + prob_side:
             action_exe = 2
+            probability = prob_back + prob_side
         elif los < prob_back + 2 * prob_side:
             action_exe = 4
+            probability = prob_back + 2 * prob_side
         else:
             action_exe = 1
+            probability = 1 - prob_back + 2 * prob_side
     elif action == 2:
         if los < prob_back:
             action_exe = 4
+            probability = prob_back
         elif los < prob_back + prob_side:
             action_exe = 1
+            probability = prob_back + prob_side
         elif los < prob_back + 2 * prob_side:
             action_exe = 3
+            probability = prob_back + 2 * prob_side
         else:
             action_exe = 2
+            probability = 1 - prob_back + 2 * prob_side
     elif action == 3:
         if los < prob_back:
             action_exe = 1
+            probability = prob_back
         elif los < prob_back + prob_side:
             action_exe = 2
+            probability = prob_back + prob_side
         elif los < prob_back + 2 * prob_side:
             action_exe = 4
+            probability = prob_back + 2 * prob_side
         else:
             action_exe = 3
+            probability = 1 - prob_back + 2 * prob_side
     elif action == 4:
         if los < prob_back:
             action_exe = 2
+            probability = prob_back
         elif los < prob_back + prob_side:
             action_exe = 1
+            probability = prob_back + prob_side
         elif los < prob_back + 2 * prob_side:
             action_exe = 3
+            probability = prob_back + 2 * prob_side
         else:
             action_exe = 4
+            probability = 1 - prob_back + 2 * prob_side
 
     # Action identifiers (1 - right, 2 - up, 3 - left, 4 - bottom): 
     if action_exe == 1:
@@ -146,8 +130,9 @@ def environment(state, action, reward_map):
             reward += reward_map[state_new[0], state_new[1]]
         else:
             reward += wall_colid_reward
+    # Action identifiers (1 - right, 2 - up, 3 - left, 4 - bottom):
 
-    return state_new, reward
+    return state_new, reward, probability
 
 
 # test for given number of episodes - pure exploration

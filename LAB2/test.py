@@ -1,5 +1,4 @@
-action1 = 1
-action2 = 3
+import numpy as np
 
-probability2 = 0.01 if (action1 - action2 % 2) else 0.15
-print(probability2)
+probability_undesired = 0.15 if (3 - 4) % 2 else 0.01
+print(probability_undesired)

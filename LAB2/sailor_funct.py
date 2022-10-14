@@ -3,6 +3,8 @@ import time
 import os
 import pdb
 import numpy as np
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
@@ -37,38 +39,7 @@ def load_data(file_name):
     return map_of_rew
 
 
-def calculate_reward(state, action, reward_map):
-    num_of_rows, num_of_columns = reward_map.shape
-    wall_colid_reward = -1.5
-    state_new = copy.deepcopy(state)
-    reward = 0
 
-    if action == 1:
-        if state[1] < num_of_columns - 1:
-            state_new[1] += 1
-            reward += reward_map[state_new[0], state_new[1]]
-        else:
-            reward += wall_colid_reward
-    elif action == 2:
-        if state[0] > 0:
-            state_new[0] -= 1
-            reward += reward_map[state_new[0], state_new[1]]
-        else:
-            reward += wall_colid_reward
-    if action == 3:
-        if state[1] > 0:
-            state_new[1] -= 1
-            reward += reward_map[state_new[0], state_new[1]]
-        else:
-            reward += wall_colid_reward
-    elif action == 4:
-        if state[0] < num_of_rows - 1:
-            state_new[0] += 1
-            reward += reward_map[state_new[0], state_new[1]]
-        else:
-            reward += wall_colid_reward
-
-    return reward
 
 
 def environment(state, action, reward_map):
@@ -176,7 +147,7 @@ def sailor_test(reward_map, Q, num_of_episodes):
                 the_end = True
 
             sum_of_rewards[episode] += reward
-    print('test-' + str(num_of_episodes) + ' average sum of rewards = ' + str(np.mean(sum_of_rewards)))
+    return np.mean(sum_of_rewards)
 
 
 # drawing map of rewards and strategy using arrows

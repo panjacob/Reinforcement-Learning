@@ -168,6 +168,7 @@ def draw(reward_map, Q):
     for i in range(num_of_rows):
         for j in range(num_of_columns-1):
             action = 1 + np.argmax(Q[i,j,:])
+            print('Plotting action = ', action)
             if action == 1:
                 # xytext - starting point, xy - end point
                 plt.annotate('', xytext=(j-0.4, i), xy=(j+0.4, i),

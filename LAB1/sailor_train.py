@@ -36,7 +36,7 @@ def train(arguments):
             else:
                 action = strategy[state[0], state[1]]
 
-            state_next, reward = environment(state, action, reward_map);
+            state_next, reward = environment(state, action, reward_map)
             Q[state[0], state[1], action - 1] += alfa * (reward + gamma * max(Q[state_next[0], state_next[1], :]))
             state = state_next
 
@@ -73,15 +73,15 @@ if __name__ == '__main__':
     # print(f"best score: {str(best)}")
 
     #     TEST2 - test wybranych parametrów
-    best = [-1, -1, -1, -100]
-    for i in range(500):
-        score = train([0.8, 0.4, 0.3])
-        if score[3] > best[3]:
-            best = score
-        print(i)
-    print(best)
+    # best = [-1, -1, -1, -100]
+    # for i in range(500):
+    #     score = train([0.8, 0.4, 0.3])
+    #     if score[3] > best[3]:
+    #         best = score
+    #     print(i)
+    # print(best)
 
 # W tym miejscu mozna uzyc kodu z funkcji sailor_test()
 
-# sf.sailor_test(reward_map, Q, 1000)
-# sf.draw(reward_map,Q)
+sf.sailor_test(reward_map, Q, 1000)
+sf.draw(reward_map,Q)

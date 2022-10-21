@@ -1,11 +1,7 @@
-# sailor functions
-
 import time
 import os
 import pdb
 import numpy as np
-import matplotlib
-matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
@@ -24,24 +20,25 @@ def load_data(file_name):
             number_of_rows += 1
             num_of_columns = number_of_values
 
-    map_of_rewards = np.zeros([number_of_rows, num_of_columns], dtype=float)
-
+    map_of_rew = np.zeros([number_of_rows, num_of_columns], dtype=float)
+    print("examples shape = " + str(map_of_rew.shape))
+    
     index = 0
     for i in range(number_of_lines):
         row_values = lines[i].split()
         number_of_values = row_values.__len__()
         if (number_of_values > 0):
             for j in range(number_of_values):
-                map_of_rewards[index][j] = float(row_values[j])
+                map_of_rew[index][j] = float(row_values[j])
             index = index + 1
 
-    return map_of_rewards
+    return map_of_rew
 
 def environment(state, action, reward_map):
     num_of_rows, num_of_columns = reward_map.shape
-    prob_side = 0.12
-    prob_back = 0.03
-    wall_colid_reward = -1.0
+    prob_side = 0.15
+    prob_back = 0.01
+    wall_colid_reward = -1.5
 
     state_new = np.copy(state)
     reward = 0
@@ -49,64 +46,64 @@ def environment(state, action, reward_map):
     los = np.random.random()    # Random number from uniform distr. from range (0,1)
 
     # Action values (1 - right, 2 - up, 3 - left, 4 - bottom):
-    choosen_action = -1
+    action_exe = -1
     if action == 1:
         if los < prob_back:
-            choosen_action = 3
+            action_exe = 3
         elif los < prob_back + prob_side:
-            choosen_action = 2
+            action_exe = 2
         elif  los < prob_back + 2*prob_side:
-            choosen_action = 4
+            action_exe = 4
         else:
-            choosen_action = 1
+            action_exe = 1
     elif action == 2:
         if los < prob_back:
-            choosen_action = 4
+            action_exe = 4
         elif los < prob_back + prob_side:
-            choosen_action = 1
+            action_exe = 1
         elif  los < prob_back + 2*prob_side:
-            choosen_action = 3
+            action_exe = 3
         else:
-            choosen_action = 2
+            action_exe = 2
     elif action == 3:
         if los < prob_back:
-            choosen_action = 1
+            action_exe = 1
         elif los < prob_back + prob_side:
-            choosen_action = 2
+            action_exe = 2
         elif  los < prob_back + 2*prob_side:
-            choosen_action = 4
+            action_exe = 4
         else:
-            choosen_action = 3
+            action_exe = 3
     elif action == 4:
         if los < prob_back:
-            choosen_action = 2
+            action_exe = 2
         elif los < prob_back + prob_side:
-            choosen_action = 1
+            action_exe = 1
         elif  los < prob_back + 2*prob_side:
-            choosen_action = 3
+            action_exe = 3
         else:
-            choosen_action = 4
+            action_exe = 4
 
     # Action identifiers (1 - right, 2 - up, 3 - left, 4 - bottom): 
-    if choosen_action == 1:
+    if action_exe == 1:
         if state[1] < num_of_columns - 1:
             state_new[1] += 1
             reward += reward_map[state_new[0],state_new[1]]
         else:
             reward += wall_colid_reward
-    elif  choosen_action == 2:
+    elif  action_exe == 2:
         if state[0] > 0:
             state_new[0] -= 1
             reward += reward_map[state_new[0],state_new[1]]
         else:
             reward += wall_colid_reward
-    if choosen_action == 3:
+    if action_exe == 3:
         if state[1] > 0:
             state_new[1] -= 1
             reward += reward_map[state_new[0],state_new[1]]
         else:
             reward += wall_colid_reward
-    elif  choosen_action == 4:
+    elif  action_exe == 4:
         if state[0] < num_of_rows - 1:
             state_new[0] += 1
             reward += reward_map[state_new[0],state_new[1]]
@@ -127,21 +124,20 @@ def sailor_test(reward_map, Q, num_of_episodes):
         the_end = False
         nr_pos = 0
         while the_end == False:
-            nr_pos = nr_pos + 1                            # move number
+            nr_pos = nr_pos + 1;                            # move number
         
             # Action choosing (1 - right, 2 - up, 3 - left, 4 - bottom): 
             action = 1 + np.argmax(Q[state[0],state[1], :])
-            state_next, reward  = environment(state, action, reward_map)
-            state = state_next       # going to the next state
+            state_next, reward  = environment(state, action, reward_map);    
+            state = state_next;      # going to the next state
         
             # end of episode if maximum number of steps is reached or last column
             # is reached
             if (nr_pos == num_of_steps_max) | (state[1] >= num_of_columns-1):
-                the_end = True
+                the_end = True;                                  
         
             sum_of_rewards[episode] += reward
-    # print('test-'+str(num_of_episodes)+' average sum of rewards = ' + str(np.mean(sum_of_rewards)))
-    return np.mean(sum_of_rewards)
+    print('test-'+str(num_of_episodes)+' average sum of rewards = ' + str(np.mean(sum_of_rewards)))
 
 
 # drawing map of rewards and strategy using arrows
@@ -151,8 +147,8 @@ def draw(reward_map, Q):
     for i in range(num_of_rows):
         for j in range(num_of_columns):
             if reward_map[i,j] > 0:
-                image_map[i,j,0] = 210
-                image_map[i,j,1] = 210
+                image_map[i,j,0] = 220
+                image_map[i,j,1] = 220
             elif reward_map[i,j] == 0:
                 image_map[i,j,2] = 255
             elif reward_map[i,j] >= -1:

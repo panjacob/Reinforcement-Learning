@@ -90,7 +90,7 @@ def calc_average_reward(state_action_reward):
 def train(epsilon, reward_map):
     Q = np.zeros([num_of_rows, num_of_columns, 4], dtype=float)
     max_reward = 0
-    for i in range(1_000_000):
+    for i in range(100_000):
         state = [0, 0]
         state_action_reward = []
         while state[1] <= num_of_columns - 2:
@@ -112,13 +112,21 @@ file_name = 'map_easy.txt'
 # file_name = 'map_big.txt'
 # file_name = 'map_spiral.txt'
 # for epsilon in np.arange(0, 1, 0.1):
-for epsilon in [0, 1, 0.1]:
-    reward_map = sf.load_data(file_name)
-    num_of_rows, num_of_columns = reward_map.shape
-    Q = train(epsilon, reward_map)
-    print(epsilon)
-    sf.sailor_test(reward_map, Q, 1000)
-    sf.draw(reward_map, Q)
+for file_name in ['map_small.txt', 'map_easy.txt', 'map_middle.txt', 'map_big.txt', 'map_spiral.txt']:
+    best_test = -999
+    best_epsilon = -999
+    for epsilon in [0, 1, 0.1]:
+        reward_map = sf.load_data(file_name)
+        num_of_rows, num_of_columns = reward_map.shape
+        Q = train(epsilon, reward_map)
+
+        test = sf.sailor_test(reward_map, Q, 1000)
+
+        if test > best_test:
+            best_epsilon = epsilon
+            best_test = test
+        # sf.draw(reward_map, Q)
+    print(file_name, round(best_epsilon, 4), round(best_test, 4))
 
 # test = sf.sailor_test(reward_map, strategy, 1000)
 # print("TEST: ", test)

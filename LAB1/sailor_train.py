@@ -1,8 +1,8 @@
 from random import random, randint
 
 import numpy as np
-import sailor_funct3 as sf
-from sailor_funct3 import environment
+import sailor_funct as sf
+from sailor_funct import environment
 from multiprocessing import Process, Pool
 
 number_of_episodes = 500  # number of training epizodes (multi-stage processes)
@@ -46,6 +46,7 @@ def train(arguments):
 
     # print(f"gamma: {gamma} alfa: {alfa} epsilon: {epsilon} score: {score}")
     # print('.')
+
     return [gamma, alfa, epsilon, score]
 
 

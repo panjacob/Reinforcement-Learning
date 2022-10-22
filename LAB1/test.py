@@ -1,4 +1,4 @@
-# import numpy as np
+import numpy as np
 #
 #
 # def findBestAction(state, Q):
@@ -12,13 +12,14 @@
 #     return best_position + 1
 #
 #
-# num_of_rows = 3
-# num_of_columns = 5
-#
-# Q = np.zeros([num_of_rows, num_of_columns, 4], dtype=float)
-#
-# Q[0, 0, 2] = 7
-# xd = max(Q[0, 0, :])
-# print(xd)
-# print(findBestAction([0, 0], Q))
+num_of_rows = 3
+num_of_columns = 5
+
+Q = np.zeros([num_of_rows, num_of_columns, 4], dtype=float)
+
+Q[0, 0, 2] = 7
+xd = max(Q[0, 0, :])
+print(xd)
+
+print(min(3,6,11))
 

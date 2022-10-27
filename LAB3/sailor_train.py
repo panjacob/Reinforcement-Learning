@@ -122,7 +122,7 @@ def find_parameters():
                         best_alpha = alpha
                         best_test = test
                     # if test > 6:
-                    #     print(round(epsilon, 2), round(alpha, 2), round(gamma, 2), round(test, 4))
+                    print(round(epsilon, 2), round(alpha, 2), round(gamma, 2), round(test, 4))
         print(file_name, round(best_epsilon, 3), round(best_alpha, 3), round(best_gamma, 3), round(best_test, 4))
 
 

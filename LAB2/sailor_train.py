@@ -126,7 +126,7 @@ def train(gamma, reward_map):
 # file_name = 'map_middle.txt'
 # file_name = 'map_big.txt'
 # file_name = 'map_spiral.txt'
-for file_name in ['map_small.txt', 'map_easy.txt', 'map_middle.txt', 'map_big.txt', 'map_spiral.txt']:
+for file_name in [ 'map_easy.txt', 'map_middle.txt', 'map_big.txt', 'map_spiral.txt']:
     reward_map = sf.load_data(file_name)
     num_of_rows, num_of_columns = reward_map.shape
     max_gamma = None
@@ -137,7 +137,7 @@ for file_name in ['map_small.txt', 'map_easy.txt', 'map_middle.txt', 'map_big.tx
         if test > max_result:
             max_result = test
             max_gamma = gamma
-        # print(test, f'gamma={round(gamma, 4)} i:{i}')
+        print(test, f'gamma={round(gamma, 4)} i:{i}')
     print(f'Najlepszy wynik dla mapy: {file_name} - {max_result}   gamma={round(max_gamma, 3)}')
 
 # strategy, _ = train()

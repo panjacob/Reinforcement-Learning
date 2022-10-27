@@ -146,7 +146,7 @@ def sailor_test(arguments):
 
             sum_of_rewards[episode] += reward
     # print('test-'+str(num_of_episodes)+' average sum of rewards = ' + str(np.mean(sum_of_rewards)))
-    print('.', end='')
+    # print('.', end='')
     return np.mean(sum_of_rewards), dummy
 
 

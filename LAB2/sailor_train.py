@@ -82,7 +82,7 @@ def train(gamma, reward_map):
         i += 1
         delta = 0
         if i > 10000:
-            print("STOP - MAX ITERATIONS!")
+            # print("STOP - MAX ITERATIONS!")
             break
         V_pom = copy.deepcopy(V)
         for x in range(num_of_rows):
@@ -137,8 +137,8 @@ for file_name in [ 'map_easy.txt', 'map_middle.txt', 'map_big.txt', 'map_spiral.
         if test > max_result:
             max_result = test
             max_gamma = gamma
-        print(test, f'gamma={round(gamma, 4)} i:{i}')
-    print(f'Najlepszy wynik dla mapy: {file_name} - {max_result}   gamma={round(max_gamma, 3)}')
+        # print(test, f'gamma={round(gamma, 4)} i:{i}')
+    # print(f'Najlepszy wynik dla mapy: {file_name} - {max_result}   gamma={round(max_gamma, 3)}')
 
 # strategy, _ = train()
 # print(reward_map)

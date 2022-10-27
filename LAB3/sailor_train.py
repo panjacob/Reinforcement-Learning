@@ -91,7 +91,7 @@ def train(arugments):
                                                 (reward + gamma * max(Q[state_new[0], state_new[1], :]) - Q[
                                                     state[0], state[1], action - 1])
             state = state_new
-    print('.', end='')
+    # print('.', end='')
     return Q, (epsilon, alpha, gamma)
 
 
@@ -134,7 +134,7 @@ def test_parameters():
     reward_map = sf.load_data(file_name)
     Q = train(epsilon, alpha, gamma, reward_map)
     test = sf.sailor_test(reward_map, Q, 1000)
-    print("TEST: ", test)
+    # print("TEST: ", test)
     sf.draw(reward_map, Q)
 
 
@@ -145,7 +145,7 @@ def find_parameters_fast(reward_map):
             for gamma in np.arange(0.1, 1, 0.1):
                 parameters.append([epsilon, alpha, gamma, reward_map])
 
-    print('Training')
+    # print('Training')
     with Pool(12) as pool:
         Qs_and_parameters = pool.map(train, parameters)
 
@@ -153,7 +153,7 @@ def find_parameters_fast(reward_map):
     for Q, parameter in Qs_and_parameters:
         test_Qs.append([reward_map, Q, 1000, parameter])
 
-    print('\nTesting')
+    # print('\nTesting')
     with Pool(12) as pool:
         results = pool.map(sf.sailor_test, test_Qs)
 
@@ -163,7 +163,7 @@ def find_parameters_fast(reward_map):
         if score > best:
             best = score
             best_params = params
-    print("\n", best, best_params)
+    # print("\n", best, best_params)
 
 # 0 4.057 (0.5, 0.2, 0.7)
 # 1 7.418 (0.2, 0.1, 0.9)

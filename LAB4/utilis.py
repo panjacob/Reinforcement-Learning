@@ -1,21 +1,56 @@
 from math import pi
 import numpy as np
+from random import randint, random
+from numpy.random import rand
+
+RESOLUTION = 40
+# Bins of from state0 to state3 and bins of F
+BIN_MIN = [-10, -10, -10, -10, -10]
+BIN_MAX = [10, 10, 10, 10, 10]
+F_MAX_RANGE = abs(BIN_MIN[4]) + BIN_MAX[4] - 1
 
 
-def best_action(Q):
-    pass
+def best_action(state_decoded, Q):
+    state = encode_states(state_decoded)
+    index = np.argmax(Q[state[0], state[1], state[2], state[3], :])
+    action_value = Q[state[0], state[1], state[2], state[3], index]
+    return action_value, index
 
 
-RESOLUTION = 100
-bin_state0 = np.linspace(-10, 10, num=RESOLUTION)
-bin_state1 = np.linspace(-10, 10, num=RESOLUTION)
-bin_state2 = np.linspace(-10, 10, num=RESOLUTION)
-bin_state3 = np.linspace(-10, 10, num=RESOLUTION)
-bin_F = np.linspace(-10, 10, num=RESOLUTION)
+def random_action():
+    index = randint(0, F_MAX_RANGE)
+    action_value = BINS[4][index]
+    return action_value, index
 
 
-def encode_Q(state, F):
-    result = np.zeros(5)
+BINS = [
+    np.linspace(BIN_MIN[0], BIN_MAX[0], num=RESOLUTION),
+    np.linspace(BIN_MIN[1], BIN_MAX[1], num=RESOLUTION),
+    np.linspace(BIN_MIN[2], BIN_MAX[2], num=RESOLUTION),
+    np.linspace(BIN_MIN[3], BIN_MAX[3], num=RESOLUTION),
+    np.linspace(BIN_MIN[4], BIN_MAX[4], num=RESOLUTION),
+]
+
+
+def encode_states(state):
+    result = []
+    for i, x in enumerate(state):
+        if x >= BIN_MAX[i]:
+            # print(f"BIN MAX ERROR: i={i} x={x}")
+            x = BIN_MAX[i]
+        if x <= BIN_MIN[i]:
+            # print(f"BIN MIN ERROR: i={i} x={x}")
+            x = BIN_MIN[i]
+        result.append(np.digitize(x, BINS[i]) - 1)
+    return result
+
+
+def decode_Q(encoded):
+    state = []
+    for i, x in enumerate(encoded):
+        state.append(BINS[i][x])
+    # F = BINS[4][encoded[4]]
+    return state
 
 
 # Obliczenie stanu wahadla w kolejnym kroku czasowym metoda analityczna
@@ -85,7 +120,7 @@ def wah_glob():
     return Fmax, krokcalk, g, tar, masawoz, masawah, drw
 
 
-def wahadlo_test(stanp):
+def save_states():
     Fmax, krokcalk, g, tar, masawoz, masawah, drw = wah_glob()
     pli = open('historia.txt', 'w')
     pli.write("Fmax = " + str(Fmax) + "\n")
@@ -95,54 +130,70 @@ def wahadlo_test(stanp):
     pli.write("masawoz = " + str(masawoz) + "\n")
     pli.write("masawah = " + str(masawah) + "\n")
     pli.write("drw = " + str(drw) + "\n")
+    return pli
 
-    sr_suma_nagrod = 0
-    liczba_krokow = 0
-    liczba_stanow_poczatkowych, lparam = stanp.shape
-    for epizod in range(liczba_stanow_poczatkowych):
+
+def wahadlo_test(state_begin, Q):
+    file = save_states()
+
+    reward_sum = 0
+    step_count = 0
+    begin_step_count, lparam = state_begin.shape
+    for episode in range(begin_step_count):
         # Wybieramy stan poczatkowy:
         # stan = rand(1,4).*[pi/1.5 pi/1.5 20 20] - [pi/3 pi/3 10 10]; % met.losowa
-        nr_stanup = epizod
-        stan = stanp[nr_stanup, :]
+        nr_stanup = episode
+        state = state_begin[nr_stanup, :]
 
-        krok = 0
+        step = 0
         suma_nagrod_epizodu = 0
         czy_przewrocenie_wahadla = 0
-        while (krok < 1000) & (czy_przewrocenie_wahadla == 0):
-            krok = krok + 1
+        while (step < 1000) & (czy_przewrocenie_wahadla == 0):
+            step = step + 1
 
-            # Wyznaczamy akcje a (sile) w stanie stan zgodnie z wyuczona strategia
-            # (bez eksploracji)
-            # ........................................................
-            # ........................................................
-            F = 0
+            F, _ = best_action(state, Q)
 
-            # wyznaczenie nowego stanu:
-            nowystan = wahadlo(stan, F)
+            nowystan = wahadlo(state, F)
 
             czy_przewrocenie_wahadla = (abs(nowystan[0]) >= np.pi / 2)
-            R = nagroda(stan, nowystan, F)
+            R = reward(state, nowystan, F)
             suma_nagrod_epizodu = suma_nagrod_epizodu + R
 
-            pli.write(str(epizod + 1) + "  " + str(stan[0]) + "  " + str(stan[1]) + "  " + str(stan[2]) + "  " + str(
-                stan[3]) + "  " + str(F) + "\n")
+            file.write(
+                str(episode + 1) + "  " + str(state[0]) + "  " + str(state[1]) + "  " + str(state[2]) + "  " + str(
+                    state[3]) + "  " + str(F) + "\n")
 
-            stan = nowystan
+            state = nowystan
 
-        sr_suma_nagrod = sr_suma_nagrod + suma_nagrod_epizodu / liczba_stanow_poczatkowych
-        liczba_krokow = liczba_krokow + krok
-        print("w %d epizodzie suma nagrod = %g, liczba krokow = %d" % (epizod, suma_nagrod_epizodu, krok))
+        reward_sum = reward_sum + suma_nagrod_epizodu / begin_step_count
+        step_count = step_count + step
+        # print("w %d epizodzie suma nagrod = %g, liczba krokow = %d" % (epizod, suma_nagrod_epizodu, krok))
 
-    print("srednia suma nagrod w epizodzie = %g" % (sr_suma_nagrod))
-    print("srednia liczba krokow ustania wahadla = %g" % (liczba_krokow / liczba_stanow_poczatkowych))
+    print("srednia suma nagrod w epizodzie = %g" % (reward_sum))
+    print("srednia liczba krokow ustania wahadla = %g" % (step_count / begin_step_count))
 
-    pli.close()
+    file.close()
 
 
-def nagroda(stan, nowystan, F):
+def reward(stan, nowystan, F):
     kara_za_odchylenie = nowystan[0] ** 2 + 0.25 * nowystan[1] ** 2 + 0.0025 * nowystan[2] ** 2 + 0.0025 * nowystan[
         3] ** 2
     kara_za_przewrocenie = (abs(nowystan[0]) >= np.pi / 2) * 1000
     # ..............................................
     # ..............................................
     return -(kara_za_odchylenie + kara_za_przewrocenie)
+
+
+BEGIN_STATES = np.array(
+    [
+        [np.pi / 6, 0, 0, 0],
+        [0, np.pi / 3, 0, 0],
+        [0, 0, 10, 0], [0, 0, 0, 10],
+        [np.pi / 12, np.pi / 6, 0, 0],
+        [np.pi / 12, -np.pi / 6, 0, 0],
+        [-np.pi / 12, np.pi / 6, 0, 0],
+        [-np.pi / 12, -np.pi / 6, 0, 0],
+        [np.pi / 12, 0, 0, 0],
+        [0, 0, -10, 10]],
+    dtype=float)
+BEGIN_STATES_COUNT, lparam = BEGIN_STATES.shape

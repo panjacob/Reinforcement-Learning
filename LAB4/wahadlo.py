@@ -1,71 +1,39 @@
-from random import random
-
-from numpy.random import rand
-
 from utilis import *
 
 
-def wahadlo_uczenie():
-    # liczba_epizodow = 100_000_000
-    liczba_epizodow = 10_000
-    alfa = 0.001  # wsp.szybkosci uczenia(moze byc funkcja czasu)
-    epsilon = 0.5  # wsp.eksploracji(moze byc funkcja czasu)
+# episode_count = 100_000_000
+# alpha - szybkość uczenia
+# epsilon - współczynnik eksploarcji
 
-    stanp = np.array(
-        [[np.pi / 6, 0, 0, 0], [0, np.pi / 3, 0, 0], [0, 0, 10, 0], [0, 0, 0, 10], [np.pi / 12, np.pi / 6, 0, 0],
-         [np.pi / 12, -np.pi / 6, 0, 0], [-np.pi / 12, np.pi / 6, 0, 0], [-np.pi / 12, -np.pi / 6, 0, 0],
-         [np.pi / 12, 0, 0, 0], [0, 0, -10, 10]], dtype=float)
-    liczba_stanow_poczatkowych, lparam = stanp.shape
-
-    # inicjacja kodowania, wyznaczenie liczby parametrów (wag):
-    # ........................................................
-    # ........................................................
-
-    # inicjacja wektora wag:
-    liczba_wag = 1000  # na razie, by sie uruchomilo
-    w = np.zeros(liczba_wag)
-
+def wahadlo_uczenie(alpha=0.2, epsilon=0.1, episode_count=1_000_000):
     Q = np.zeros([RESOLUTION, RESOLUTION, RESOLUTION, RESOLUTION, RESOLUTION], dtype=float)
 
-    for epizod in range(liczba_epizodow):
-        # Wybieramy stan poczatkowy:
-        # stan = rand(1,4).*[pi/1.5 pi/1.5 20 20] - [pi/3 pi/3 10 10]; % met.losowa
-        nr_stanup = epizod % liczba_stanow_poczatkowych
-        stan = stanp[nr_stanup, :]
+    for episode in range(episode_count):
+        state_start = episode % BEGIN_STATES_COUNT
+        state = BEGIN_STATES[state_start, :]
 
-        krok = 0
-        czy_przewrocenie_wahadla = 0
-        while (krok < 1000) & (czy_przewrocenie_wahadla == 0):
-            krok = krok + 1
+        for i in range(episode_count):
+            F, F_index = random_action() if random() < epsilon else best_action(state, Q)
+            state_new = wahadlo(state, F)
+            R = reward(state, state_new, F)
+            s = encode_states(state)
+            best_action_next, _ = best_action(state_new, Q)
+            # Q[s[0], s[1], s[2], s[3], F_index] = R
 
-            # Wyznaczamy akcje a (sile) w stanie stan z uwzględnieniem
-            # eksploracji (np. metoda epsilon-zachlanna lub softmax)
-            # ........................................................
-            # ........................................................
-            # Epsilon greedy
-            if random() > epsilon:
-                F = np.random.uniform(0, 2)
-            else:
-                F = best_action()
+            update = Q[s[0], s[1], s[2], s[3], F_index] + alpha * \
+                     (R + 0.8 * best_action_next - Q[s[0], s[1], s[2], s[3], F_index])
+            Q[s[0], s[1], s[2], s[3], F_index] = update
 
-            # wyznaczenie nowego stanu:
-            nowystan = wahadlo(stan, F)
-            print('nowy stan', nowystan)
+            state = state_new
 
-            czy_przewrocenie_wahadla = (abs(nowystan[0]) >= np.pi / 2)
-            R = nagroda(stan, nowystan, F)
-
-            # Aktualizujemy wartosci Q dla aktualnego stanu i wybranej akcji:
-            # ........................................................
-            # ........................................................
-            # w = w + ...
-
-            stan = nowystan
+            if abs(state_new[0]) >= (np.pi / 2):
+                # print('Upadek po ', i)
+                break
 
         # co jakis czas test z wygenerowaniem historii do pliku:
-        if epizod % 1000 == 0:
-            print((epizod / liczba_epizodow) * 100, "%")
-            wahadlo_test(stanp)
+        if episode % 1000 == 0:
+            print((episode / episode_count) * 100, "%")
+            wahadlo_test(BEGIN_STATES, Q)
 
 
 wahadlo_uczenie()

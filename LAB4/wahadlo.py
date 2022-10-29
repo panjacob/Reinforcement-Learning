@@ -7,12 +7,9 @@ from utilis import *
 # alpha - szybkość uczenia
 # epsilon - współczynnik eksploarcji
 
-def wahadlo_uczenie(alpha=0.2, epsilon=0.1, episode_count=10_000, warmup_steps=20_000):
-    Q = np.zeros([RESOLUTION[0], RESOLUTION[1], RESOLUTION[2], RESOLUTION[3], RESOLUTION[4]], dtype=float)
-    # print(Q.size)
-    # print(Q.itemsize)
-    # print(Q.size * Q.itemsize / 1_000_000)
-    Q_size = Q.size
+def wahadlo_uczenie(alpha=0.5, gamma=0.5, epsilon=0.1, episode_count=10_000, warmup_steps=20_000):
+    Q = np.full([RESOLUTION[0], RESOLUTION[1], RESOLUTION[2], RESOLUTION[3], RESOLUTION[4]], fill_value=0.0,
+                dtype=float)
     is_warmup = True
     max_steps = 100
     for episode in range(episode_count):
@@ -26,37 +23,35 @@ def wahadlo_uczenie(alpha=0.2, epsilon=0.1, episode_count=10_000, warmup_steps=2
         # state_start = episode % BEGIN_STATES_COUNT
         # state = BEGIN_STATES[state_start, :]
         state = BEGIN_STATES[0]
-        W = np.zeros(max_steps, dtype=float)
+        W = np.full(40, fill_value=1, dtype=float)
         HISTORY = []
 
         for i in range(max_steps):
             F, F_index = random_action() if random() < epsilon else best_action(state, Q)
             s = encode_states(state)
-            state_new = wahadlo(state, F)
 
-            # if abs(state_new[0]) > BIN_MAX[0] or abs(state_new[2]) > BIN_MAX[2]:
+            state_next = wahadlo(state, F)
+            sn = encode_states(state_next)
 
             R = reward(state, state, F)
-            Rn = reward(state, state_new, F)
-            # alpha = wielkość kroku
-            # w = w - alpha * error
-            # Q[(s[0], s[1], s[2], s[3], F_index)] = Rn ** 2
-            # W[i] = (alpha ** i) * R
-            # error = (Q[(s[0], s[1], s[2], s[3], F_index)]  - Rn) ** 2
-            l_gradient = Rn - R
-            # W[i] = Q[(s[0], s[1], s[2], s[3], F_index)] - (alpha ** i) * error
-            W[i] = (0.3 ** i) * l_gradient ** 2
-            # W[i] = Rn ** 2
+
+            _, F_index_next = best_action(state_next, Q)
+            Q_max_next = Q[(sn[0], sn[1], sn[2], sn[3], F_index_next)]
+            Q_max = Q[(s[0], s[1], s[2], s[3], F_index)]
+            Q_gradient = gradient(Q[s[0], s[1], s[2], s[3], :])
+            W_delta = alpha * ((R + gamma + Q_max_next) - Q_max) * Q_gradient
+
+            Q[s[0], s[1], s[2], s[3], :] += W_delta
+            print(Q[s[0], s[1], s[2], s[3], :])
+
             HISTORY.append((s[0], s[1], s[2], s[3], F_index))
-            # Q[state_F] = Q[state_F] + alpha * (R + gamma * reward_next - Q[state_F])
-            # Q[state_F] = Q[state_F] + alpha * (R + gamma * reward_next)
-            state = state_new
-            if abs(state_new[0]) >= np.pi / 2 or abs(state_new[2]) > BIN_MAX[2]:
+            state = state_next
+            if abs(state_next[0]) >= np.pi / 2 or abs(state_next[2]) > BIN_MAX[2]:
                 break
 
-        for i, state in enumerate(HISTORY):
-            # print(np.sum(W[i:]))
-            Q[state] = np.sum(W[i:])
+        # for i, state in enumerate(HISTORY):
+        #     # print(np.sum(W[i:]))
+        #     Q[state] = np.sum(W[i:])
 
         if episode % 1000 == 0:
             score, steps = wahadlo_test(BEGIN_STATES, Q)
@@ -64,7 +59,7 @@ def wahadlo_uczenie(alpha=0.2, epsilon=0.1, episode_count=10_000, warmup_steps=2
             # visited = round(np.count_nonzero(Q) / Q_size * 100, 6)
             visited = np.count_nonzero(Q)
             print(f"{progress}% - score: {score}  steps: {steps}   visited: {visited}")
-            print(np.min(Q[np.nonzero(Q)]), np.max(Q[np.nonzero(Q)]))
+            # print(np.min(Q[np.nonzero(Q)]), np.max(Q[np.nonzero(Q)]))
 
     return wahadlo_test(BEGIN_STATES, Q)
 
@@ -84,4 +79,4 @@ def wahadlo_uczenie(alpha=0.2, epsilon=0.1, episode_count=10_000, warmup_steps=2
 #                 best_score = score
 #                 print('best score: ', score, (alpha, gamma, epsilon))
 
-wahadlo_uczenie(0.9, 0.1, 1_000_000)
+wahadlo_uczenie()

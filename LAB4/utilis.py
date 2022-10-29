@@ -1,7 +1,8 @@
 from math import pi
 import numpy as np
 from random import randint, random
-from numpy.random import rand
+# from numpy.random import rand
+from numpy import gradient
 
 RESOLUTION = [40, 40, 40, 40, 40]
 # Bins of from state0 to state3 and bins of F
@@ -192,7 +193,7 @@ def reward(stan, nowystan, F):
     kara_za_wyjscie = -1000 if abs(nowystan[2]) > BIN_MAX[2] else 0
     score = -(kara_za_odchylenie + kara_za_przewrocenie + kara_za_wyjscie)
 
-    return score
+    return score + 1100
 
 
 BEGIN_STATES = np.array(

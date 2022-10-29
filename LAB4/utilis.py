@@ -3,11 +3,18 @@ import numpy as np
 from random import randint, random
 from numpy.random import rand
 
-RESOLUTION = 40
+RESOLUTION = [40, 40, 40, 40, 40]
 # Bins of from state0 to state3 and bins of F
-BIN_MIN = [-10, -10, -10, -10, -10]
-BIN_MAX = [10, 10, 10, 10, 10]
-F_MAX_RANGE = abs(BIN_MIN[4]) + BIN_MAX[4] - 1
+# 0 kat 1.5
+# 1 ??
+# 2 pozycja
+
+BIN_MAX = [np.pi / 2, 3, 100, 50, 1000]
+BIN_MIN = [-x for x in BIN_MAX]
+
+
+# F_MAX_RANGE = abs(BIN_MIN[4]) + BIN_MAX[4] - 1
+# print("Fmaxrange", F_MAX_RANGE)
 
 
 def best_action(state_decoded, Q):
@@ -18,17 +25,17 @@ def best_action(state_decoded, Q):
 
 
 def random_action():
-    index = randint(0, F_MAX_RANGE)
+    index = randint(0, RESOLUTION[4] - 1)
     action_value = BINS[4][index]
     return action_value, index
 
 
 BINS = [
-    np.linspace(BIN_MIN[0], BIN_MAX[0], num=RESOLUTION),
-    np.linspace(BIN_MIN[1], BIN_MAX[1], num=RESOLUTION),
-    np.linspace(BIN_MIN[2], BIN_MAX[2], num=RESOLUTION),
-    np.linspace(BIN_MIN[3], BIN_MAX[3], num=RESOLUTION),
-    np.linspace(BIN_MIN[4], BIN_MAX[4], num=RESOLUTION),
+    np.linspace(BIN_MIN[0], BIN_MAX[0], num=RESOLUTION[0]),
+    np.linspace(BIN_MIN[1], BIN_MAX[1], num=RESOLUTION[1]),
+    np.linspace(BIN_MIN[2], BIN_MAX[2], num=RESOLUTION[2]),
+    np.linspace(BIN_MIN[3], BIN_MAX[3], num=RESOLUTION[3]),
+    np.linspace(BIN_MIN[4], BIN_MAX[4], num=RESOLUTION[4]),
 ]
 
 
@@ -73,6 +80,7 @@ def wahadlo(stan, F):
 
     sx = np.sin(stan[0]);
     cx = np.cos(stan[0]);
+
     c1 = masawoz + masawah * sx * sx;
     c2 = momwah * stan[1] * stan[1] * sx;
     c3 = tar * stan[3] * cx;
@@ -140,10 +148,10 @@ def wahadlo_test(state_begin, Q):
     step_count = 0
     begin_step_count, lparam = state_begin.shape
     for episode in range(begin_step_count):
-        # Wybieramy stan poczatkowy:
-        # stan = rand(1,4).*[pi/1.5 pi/1.5 20 20] - [pi/3 pi/3 10 10]; % met.losowa
-        nr_stanup = episode
-        state = state_begin[nr_stanup, :]
+        # nr_stanup = episode
+        # state = state_begin[nr_stanup, :]
+        # TODO: DO zmiany - tymczasowo!!
+        state = BEGIN_STATES[0]
 
         step = 0
         suma_nagrod_epizodu = 0
@@ -169,19 +177,22 @@ def wahadlo_test(state_begin, Q):
         step_count = step_count + step
         # print("w %d epizodzie suma nagrod = %g, liczba krokow = %d" % (epizod, suma_nagrod_epizodu, krok))
 
-    print("srednia suma nagrod w epizodzie = %g" % (reward_sum))
-    print("srednia liczba krokow ustania wahadla = %g" % (step_count / begin_step_count))
+    # print("srednia suma nagrod w epizodzie = %g" % (reward_sum))
+    # print("srednia liczba krokow ustania wahadla = %g" % (step_count / begin_step_count))
 
     file.close()
+    return reward_sum, step_count / begin_step_count
 
 
 def reward(stan, nowystan, F):
     kara_za_odchylenie = nowystan[0] ** 2 + 0.25 * nowystan[1] ** 2 + 0.0025 * nowystan[2] ** 2 + 0.0025 * nowystan[
         3] ** 2
+
     kara_za_przewrocenie = (abs(nowystan[0]) >= np.pi / 2) * 1000
-    # ..............................................
-    # ..............................................
-    return -(kara_za_odchylenie + kara_za_przewrocenie)
+    kara_za_wyjscie = -1000 if abs(nowystan[2]) > BIN_MAX[2] else 0
+    score = -(kara_za_odchylenie + kara_za_przewrocenie + kara_za_wyjscie)
+
+    return score
 
 
 BEGIN_STATES = np.array(

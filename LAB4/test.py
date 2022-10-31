@@ -1,24 +1,26 @@
 import numpy as np
+from utilis import encode_states, RESOLUTION, BINS, decode_state
 
-#
-# #
-# R = [0, 1, 2, 3, 4]
-# W = [0, 0, 0, 0, 0]
-# Q = [0, 0, 0, 0, 0]
-#
-# # W = (0.3 ** i) * l_gradient ** 2
-#
-# for i, r in enumerate(R):
-#     W[i] = (0.9 ** i) * R[i]
-#
-# for i, w in enumerate(W):
-#     Q[i] = sum(W[i:])
-#
-# print(Q)
+Q = np.random.rand(RESOLUTION[0], RESOLUTION[1], RESOLUTION[2], RESOLUTION[3], RESOLUTION[4])
 
-x = np.gradient([-1, 8, 8])
-print(x)
-
-a = np.array([1, 2, 3])
-b = np.array([1, 2, 3])
-print(a * b)
+# def best_action(state_encoded, Q):
+#     action_index = np.argmax(Q[state_encoded[0], state_encoded[1], state_encoded[2], state_encoded[3], :])
+#     action = BINS[4][action_index]
+#     return action, action_index
+#
+#
+# def action_score(state_encoded, action_index, Q):
+#     return Q[state_encoded[0], state_encoded[1], state_encoded[2], state_encoded[3], action_index]
+#
+#
+# action_index = 20
+# new_score = 999
+# state = [0, 0, 0, 0]
+#
+# s = encode_states(state)
+# print(s)
+# Q[s[0], s[1], s[2], s[3], action_index] = new_score
+# print(Q[s[0], s[1], s[2], s[3], :])
+# value, index = best_action(s, Q)
+# score = action_score(s, action_index, Q)
+# print(value, score)

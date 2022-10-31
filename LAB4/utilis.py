@@ -18,11 +18,21 @@ BIN_MIN = [-x for x in BIN_MAX]
 # print("Fmaxrange", F_MAX_RANGE)
 
 
-def best_action(state_decoded, Q):
-    state = encode_states(state_decoded)
-    index = np.argmax(Q[state[0], state[1], state[2], state[3], :])
-    action_value = Q[state[0], state[1], state[2], state[3], index]
-    return action_value, index
+# def best_action(state_decoded, Q):
+#     state = encode_states(state_decoded)
+#     index = np.argmax(Q[state[0], state[1], state[2], state[3], :])
+#     action_value = Q[state[0], state[1], state[2], state[3], index]
+#     return action_value, index
+
+def calc_best_action(state_encoded, Q):
+    # print("state: ", state_encoded)
+    action_index = np.argmax(Q[state_encoded[0], state_encoded[1], state_encoded[2], state_encoded[3], :])
+    action = BINS[4][action_index]
+    return action, action_index
+
+
+def calc_action_score(state_encoded, action_index, Q):
+    return Q[state_encoded[0], state_encoded[1], state_encoded[2], state_encoded[3], action_index]
 
 
 def random_action():
@@ -53,7 +63,7 @@ def encode_states(state):
     return result
 
 
-def decode_Q(encoded):
+def decode_state(encoded):
     state = []
     for i, x in enumerate(encoded):
         state.append(BINS[i][x])
@@ -160,12 +170,13 @@ def wahadlo_test(state_begin, Q):
         while (step < 1000) & (czy_przewrocenie_wahadla == 0):
             step = step + 1
 
-            F, _ = best_action(state, Q)
+            s = encode_states(state)
+            F, _ = calc_best_action(s, Q)
 
             nowystan = wahadlo(state, F)
 
             czy_przewrocenie_wahadla = (abs(nowystan[0]) >= np.pi / 2)
-            R = reward(state, nowystan, F)
+            R = reward(nowystan)
             suma_nagrod_epizodu = suma_nagrod_epizodu + R
 
             file.write(
@@ -185,15 +196,14 @@ def wahadlo_test(state_begin, Q):
     return reward_sum, step_count / begin_step_count
 
 
-def reward(stan, nowystan, F):
-    kara_za_odchylenie = nowystan[0] ** 2 + 0.25 * nowystan[1] ** 2 + 0.0025 * nowystan[2] ** 2 + 0.0025 * nowystan[
-        3] ** 2
+def reward(state):
+    kara_za_odchylenie = state[0] ** 2 + 0.25 * state[1] ** 2 + 0.0025 * state[2] ** 2 + 0.0025 * state[3] ** 2
 
-    kara_za_przewrocenie = (abs(nowystan[0]) >= np.pi / 2) * 1000
-    kara_za_wyjscie = -1000 if abs(nowystan[2]) > BIN_MAX[2] else 0
+    kara_za_przewrocenie = (abs(state[0]) >= np.pi / 2) * 1000
+    kara_za_wyjscie = -1000 if abs(state[2]) > BIN_MAX[2] else 0
     score = -(kara_za_odchylenie + kara_za_przewrocenie + kara_za_wyjscie)
 
-    return score + 1100
+    return score
 
 
 BEGIN_STATES = np.array(

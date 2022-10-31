@@ -8,26 +8,24 @@ from utilis import *
 # epsilon - współczynnik eksploarcji
 
 def wahadlo_uczenie(alpha=0.5, gamma=0.5, epsilon=0.1, episode_count=10_000, warmup_steps=20_000):
-    Q = np.full([RESOLUTION[0], RESOLUTION[1], RESOLUTION[2], RESOLUTION[3], RESOLUTION[4]], fill_value=0.0,
-                dtype=float)
+    Q = np.random.rand([RESOLUTION[0], RESOLUTION[1], RESOLUTION[2], RESOLUTION[3], RESOLUTION[4]], dtype=float)
     is_warmup = True
     max_steps = 100
     for episode in range(episode_count):
-        if is_warmup and episode < warmup_steps:
-            epsilon = 1
-        elif is_warmup and episode > warmup_steps:
-            is_warmup = False
-            epsilon = 0.1
-            print('end warmup <---------------------------------------')
+        # if is_warmup and episode < warmup_steps:
+        #     epsilon = 1
+        # elif is_warmup and episode > warmup_steps:
+        #     is_warmup = False
+        #     epsilon = 0.1
+        #     print('end warmup <---------------------------------------')
 
         # state_start = episode % BEGIN_STATES_COUNT
         # state = BEGIN_STATES[state_start, :]
         state = BEGIN_STATES[0]
-        W = np.full(40, fill_value=1, dtype=float)
-        HISTORY = []
+        D = []
 
         for i in range(max_steps):
-            F, F_index = random_action() if random() < epsilon else best_action(state, Q)
+            F, F_index = random_action() if random() < epsilon else calc_best_action(state, Q)
             s = encode_states(state)
 
             state_next = wahadlo(state, F)
@@ -35,7 +33,7 @@ def wahadlo_uczenie(alpha=0.5, gamma=0.5, epsilon=0.1, episode_count=10_000, war
 
             R = reward(state, state, F)
 
-            _, F_index_next = best_action(state_next, Q)
+            _, F_index_next = calc_best_action(state_next, Q)
             Q_max_next = Q[(sn[0], sn[1], sn[2], sn[3], F_index_next)]
             Q_max = Q[(s[0], s[1], s[2], s[3], F_index)]
             Q_gradient = gradient(Q[s[0], s[1], s[2], s[3], :])
@@ -44,7 +42,7 @@ def wahadlo_uczenie(alpha=0.5, gamma=0.5, epsilon=0.1, episode_count=10_000, war
             Q[s[0], s[1], s[2], s[3], :] += W_delta
             print(Q[s[0], s[1], s[2], s[3], :])
 
-            HISTORY.append((s[0], s[1], s[2], s[3], F_index))
+            D.append((s[0], s[1], s[2], s[3], F_index))
             state = state_next
             if abs(state_next[0]) >= np.pi / 2 or abs(state_next[2]) > BIN_MAX[2]:
                 break

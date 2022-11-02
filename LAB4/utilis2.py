@@ -189,6 +189,6 @@ def reward(state):
     kara_za_przewrocenie = (abs(state[0]) >= np.pi / 2) * 1000
     # kara_za_wyjscie = -1000 if abs(state[2]) > BIN_MAX[2] else 0
     # score = -(kara_za_odchylenie + kara_za_przewrocenie + kara_za_wyjscie)
-    score = kara_za_odchylenie
+    score = -kara_za_odchylenie
 
     return score

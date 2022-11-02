@@ -29,7 +29,7 @@ def wahadlo_uczenie(gamma=0.99, epsilon=0.1, episode_count=1_000, minibatch_size
             s = encode_states(state)
             action = predict_action(s, W)
             state_next = wahadlo(state, action)
-            r = reward(state_next)
+            r = reward(state_next) * i
             batch.append([s, action, r])
 
             if abs(state_next[0]) >= np.pi / 2 or abs(state_next[2]) > BIN_MAX[2]:
@@ -64,9 +64,9 @@ def wahadlo_uczenie(gamma=0.99, epsilon=0.1, episode_count=1_000, minibatch_size
             if episode >= 300:
                 lr = 1e-10
             if episode >= 600:
-                lr = 1e-11
-            if episode >= 800:
                 lr = 1e-12
+            if episode >= 800:
+                lr = 1e-13
             # print(f"{progress}% MSE={MSE_ALL[-1]}")
     plt.plot(MSE_PLOT)
     plt.plot(SCORE_PLOT)

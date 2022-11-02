@@ -1,6 +1,4 @@
-import numpy as np
-
-from utilis import *
+from LAB4.old.utilis import *
 
 
 # episode_count = 100_000_000

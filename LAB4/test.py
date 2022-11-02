@@ -1,26 +1,40 @@
 import numpy as np
-from utilis import encode_states, RESOLUTION, BINS, decode_state
+import matplotlib.pyplot as plt
 
-Q = np.random.rand(RESOLUTION[0], RESOLUTION[1], RESOLUTION[2], RESOLUTION[3], RESOLUTION[4])
+W = np.array([0.0, 0.0])
+W_len = W.shape[0]
 
-# def best_action(state_encoded, Q):
-#     action_index = np.argmax(Q[state_encoded[0], state_encoded[1], state_encoded[2], state_encoded[3], :])
-#     action = BINS[4][action_index]
-#     return action, action_index
+
+def predict(x, W):
+    return W[0] * x[0] + W[1] * x[1]
+
+
+def f(x):
+    return x[0] ** 2 - x[1]
+
+
+X = []
+for a in range(5):
+    for b in range(5, 10):
+        X.append([a, b])
+
+X = np.array(X)
+Y = np.array([f(x) for x in X])
+n = X.shape[0]
+print(X[:, 1])
 #
-#
-# def action_score(state_encoded, action_index, Q):
-#     return Q[state_encoded[0], state_encoded[1], state_encoded[2], state_encoded[3], action_index]
-#
-#
-# action_index = 20
-# new_score = 999
-# state = [0, 0, 0, 0]
-#
-# s = encode_states(state)
-# print(s)
-# Q[s[0], s[1], s[2], s[3], action_index] = new_score
-# print(Q[s[0], s[1], s[2], s[3], :])
-# value, index = best_action(s, Q)
-# score = action_score(s, action_index, Q)
-# print(value, score)
+lr = 0.001
+MSE_ALL = []
+for e in range(10000):
+    Y_hat = np.array([predict(x, W) for x in X])
+    MSE = (1 / n) * np.sum(Y - Y_hat)
+    for wi in range(W_len):
+        derivative_wi = (-2 / n) * np.sum(X[:, wi] * (Y - Y_hat))
+        W[wi] -= lr * derivative_wi
+
+    MSE_ALL.append(MSE)
+
+print(W)
+# plt.plot(MSE_ALL)
+# plt.ylabel('some numbers')
+# plt.show()

@@ -1,6 +1,4 @@
-import numpy as np
-
-from utilis import *
+from LAB4.old.utilis import *
 
 
 # episode_count = 100_000_000
@@ -60,9 +58,9 @@ def wahadlo_uczenie(gamma=0.99, epsilon=0.1, episode_count=10_000, minibatch_siz
             y_j = isTerminal * r_j + gamma * best_score_j
 
             loss = (y_j - Q[s_j[0], s_j[1], s_j[2], s_j[3], action_index_j]) ** 2
-            print(loss)
 
-            Q[s_j[0], s_j[1], s_j[2], s_j[3], action_index] += loss
+            print(Q[s_j[0], s_j[1], s_j[2], s_j[3], action_index_j], ' + ', loss)
+            Q[s_j[0], s_j[1], s_j[2], s_j[3], action_index_j] += loss
 
             state = state_next
 

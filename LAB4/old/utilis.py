@@ -141,7 +141,7 @@ def wah_glob():
 
 def save_states():
     Fmax, krokcalk, g, tar, masawoz, masawah, drw = wah_glob()
-    pli = open('historia.txt', 'w')
+    pli = open('../historia.txt', 'w')
     pli.write("Fmax = " + str(Fmax) + "\n")
     pli.write("krokcalk = " + str(krokcalk) + "\n")
     pli.write("g = " + str(g) + "\n")

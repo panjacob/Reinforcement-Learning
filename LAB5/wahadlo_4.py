@@ -3,7 +3,7 @@ from random import random
 import numpy as np
 from matplotlib import pyplot as plt
 
-from utilis2 import *
+from utilis4 import *
 
 
 # episode_count = 100_000_000
@@ -14,13 +14,9 @@ from utilis2 import *
 def wahadlo_uczenie(gamma=0.99, epsilon=0.1, episode_count=1_000, minibatch_size=8):
     W = np.random.rand(FEATURE_COUNT)
     max_steps = 1000
-    MSE_ALL = []
-    MSE_PLOT = []
-    SCORE_PLOT = []
     lr = 1e-8
 
     for episode in range(episode_count):
-        isTerminal = False
         state = BEGIN_STATES[0]
         batch = []
 
@@ -50,47 +46,11 @@ def wahadlo_uczenie(gamma=0.99, epsilon=0.1, episode_count=1_000, minibatch_size
                 derivative_wi = (-2 / n) * np.sum(S_A[:, wi] * (R - Y_hat))
                 W[wi] -= lr * derivative_wi
                 MSE_batches.append(MSE)
-        MSE_ALL.append(sum(MSE_batches) / len(MSE_batches))
-        # print(MSE)
 
         if episode % 100 == 0:
             score, steps = wahadlo_test(BEGIN_STATES, W)
-            # progress = round((episode / episode_count) * 100, 2)
-            MSE_PLOT.append(MSE_ALL[-1])
-            SCORE_PLOT.append(score)
-            print(f"episode: {episode} - score: {score}  steps: {steps}  MSE={MSE_ALL[-1]}  lr:{lr}")
-            if episode >= 100:
-                lr = 1e-9
-            if episode >= 300:
-                lr = 1e-10
-            if episode >= 600:
-                lr = 1e-12
-            if episode >= 800:
-                lr = 1e-13
-            # print(f"{progress}% MSE={MSE_ALL[-1]}")
-    plt.plot(MSE_PLOT)
-    plt.plot(SCORE_PLOT)
-    plt.title(f"MSE lr:{lr} epochs:{episode_count}")
-    plt.xlabel("Kroki")
-    plt.ylabel("MSE")
-    plt.show()
-    print(W)
+            print(f"episode: {episode} - score: {score}  steps: {steps}  lr:{lr}")
     return 0
 
-
-# best_steps = 0
-# best_steps_params = ()
-# best_score = -9999
-# best_score_params = ()
-# for alpha in np.arange(0.1, 1, 0.2):
-#     for gamma in np.arange(0.1, 1, 0.2):
-#         for epsilon in np.arange(0.1, 1, 0.2):
-#             score, steps = wahadlo_uczenie(alpha, gamma, epsilon)
-#             if steps > best_steps:
-#                 best_steps = steps
-#                 print('best steps: ', steps, (alpha, gamma, epsilon))
-#             if score > best_score:
-#                 best_score = score
-#                 print('best score: ', score, (alpha, gamma, epsilon))
 
 wahadlo_uczenie()

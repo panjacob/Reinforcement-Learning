@@ -3,7 +3,7 @@ from random import random
 import numpy as np
 from matplotlib import pyplot as plt
 
-from utilis2 import *
+from utilis4 import *
 
 
 # episode_count = 100_000_000
@@ -11,8 +11,9 @@ from utilis2 import *
 # epsilon - współczynnik eksploarcji
 
 
-def wahadlo_uczenie(gamma=0.99, epsilon=0.1, episode_count=1_000, minibatch_size=8):
-    W = np.random.rand(FEATURE_COUNT)
+def wahadlo_uczenie(episode_count=1_000, ):
+    W = np.random.rand(FEATURE_COUNT, RESOLUTION)
+
     max_steps = 1000
     MSE_ALL = []
     MSE_PLOT = []
@@ -20,7 +21,6 @@ def wahadlo_uczenie(gamma=0.99, epsilon=0.1, episode_count=1_000, minibatch_size
     lr = 1e-8
 
     for episode in range(episode_count):
-        isTerminal = False
         state = BEGIN_STATES[0]
         batch = []
 
@@ -36,6 +36,7 @@ def wahadlo_uczenie(gamma=0.99, epsilon=0.1, episode_count=1_000, minibatch_size
                 break
 
             state = state_next
+        return
 
         n = len(batch)
         S = [x[0] for x in batch]

@@ -3,7 +3,7 @@ from random import randint
 
 import numpy as np
 
-RESOLUTION = 500
+RESOLUTION = 1000
 FEATURE_COUNT = 5
 BIN_MAX = [np.pi / 2, 3, 100, 50, 1000]
 BIN_MIN = [-x for x in BIN_MAX]
@@ -17,22 +17,23 @@ BINS = [
 
 
 def one_hot_encoding_state(s, a):
-    arr = np.zeros(RESOLUTION)
-    arr
+    result = np.zeros((FEATURE_COUNT, RESOLUTION), dtype=float)
+    for i, x in enumerate(s + [a]):
+        # print(BINS[i][x])
+        result[i, x] = 1
+    return result
+
 
 
 def predict_reward(s, a, W):
-    print(s, type(s))
-    print(s.shape())
-    print(a.shape())
-    print(W.shape())
-    return np.sum((s + [a]) * W)
+    one_hot_states = one_hot_encoding_state(s, a)
+    return np.sum(one_hot_states * W)
 
 
 def predict_action(s, W):
     best_r_predicted = 0
     best_a_predicted = 0
-    for a in range(BIN_MIN[4], BIN_MAX[4]):
+    for a in range(0, RESOLUTION):
         r_predicted = predict_reward(s, a, W)
         if r_predicted > best_r_predicted:
             best_a_predicted = a
@@ -41,7 +42,7 @@ def predict_action(s, W):
 
 
 def random_action():
-    return random.uniform(BIN_MIN[4], BIN_MAX[4])
+    return random.randint(0, RESOLUTION-1)
 
 
 def encode_states(state):

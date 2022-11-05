@@ -1,4 +1,4 @@
-from random import random
+# from random import random
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -11,70 +11,47 @@ from utilis4 import *
 # epsilon - współczynnik eksploarcji
 
 
-def wahadlo_uczenie(episode_count=1_000, ):
+def wahadlo_uczenie(episode_count=1_000, alpha=0.001, gamma=1, epsilon=0.1):
     W = np.random.rand(FEATURE_COUNT, RESOLUTION)
 
     max_steps = 1000
-    MSE_ALL = []
-    MSE_PLOT = []
-    SCORE_PLOT = []
-    lr = 1e-8
+    MEs = []
 
     for episode in range(episode_count):
         state = BEGIN_STATES[0]
-        batch = []
-
-        # Learning loop
+        E = []
         for i in range(max_steps):
+            r = reward(state)
             s = encode_states(state)
-            action = predict_action(s, W)
-            state_next = wahadlo(state, action)
-            r = reward(state_next)
-            batch.append([s, action, r])
+            # random() < epsilon
+            a = random_action() if random.random() < epsilon else predict_action(s, W)
+            # print(a)
+
+            r_hat = predict_reward(s, a, W)
+            state_next = wahadlo(state, a)
+            s_next = encode_states(state_next)
+            a_next = predict_action(s_next, W)
+            r_next_hat = predict_reward(s_next, a_next, W)
+            one_hot_states = one_hot_encoding_state(s, a)
 
             if abs(state_next[0]) >= np.pi / 2 or abs(state_next[2]) > BIN_MAX[2]:
                 break
 
-            state = state_next
-        return
+            W = W + alpha * (r + gamma * r_next_hat - r_hat) * one_hot_states
+            # print(np.sum(W))
 
-        n = len(batch)
-        S = [x[0] for x in batch]
-        A = [x[1] for x in batch]
-        R = [x[2] for x in batch]
-        S_A = np.array([x[0] + [x[1]] for x in batch])
-        MSE_batches = []
-        for i in range(n):
-            Y_hat = np.array([predict_reward(s, a, W) for s, a in zip(S, A)])
-            MSE = (1 / n) * np.sum(R - Y_hat)
-            for wi in range(FEATURE_COUNT):
-                derivative_wi = (-2 / n) * np.sum(S_A[:, wi] * (R - Y_hat))
-                W[wi] -= lr * derivative_wi
-                MSE_batches.append(MSE)
-        MSE_ALL.append(sum(MSE_batches) / len(MSE_batches))
-        # print(MSE)
+
+            state = state_next
+        # MEs.append(sum(E) / len(E))
 
         if episode % 100 == 0:
             score, steps = wahadlo_test(BEGIN_STATES, W)
-            # progress = round((episode / episode_count) * 100, 2)
-            MSE_PLOT.append(MSE_ALL[-1])
-            SCORE_PLOT.append(score)
-            print(f"episode: {episode} - score: {score}  steps: {steps}  MSE={MSE_ALL[-1]}  lr:{lr}")
-            if episode >= 100:
-                lr = 1e-9
-            if episode >= 300:
-                lr = 1e-10
-            if episode >= 600:
-                lr = 1e-12
-            if episode >= 800:
-                lr = 1e-13
-            # print(f"{progress}% MSE={MSE_ALL[-1]}")
-    plt.plot(MSE_PLOT)
-    plt.plot(SCORE_PLOT)
-    plt.title(f"MSE lr:{lr} epochs:{episode_count}")
-    plt.xlabel("Kroki")
-    plt.ylabel("MSE")
-    plt.show()
+            print(f"episode: {episode} - score: {score}  steps: {steps}")
+
+    # plt.plot(MEs)
+    # plt.xlabel("Kroki")
+    # plt.ylabel("ME")
+    # plt.show()
     print(W)
     return 0
 

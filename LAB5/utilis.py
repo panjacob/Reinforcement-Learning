@@ -3,7 +3,7 @@ from random import randint
 
 import numpy as np
 
-RESOLUTION = 500
+RESOLUTION = 50
 FEATURE_COUNT = 5
 BIN_MAX = [np.pi / 2, 3, 100, 50, 1000]
 BIN_MIN = [-x for x in BIN_MAX]
@@ -16,14 +16,29 @@ BINS = [
 ]
 
 
+def one_hot_encoding_state(s, a, old_gradient=None):
+    if old_gradient is None:
+        result = np.zeros((FEATURE_COUNT, RESOLUTION), dtype=float)
+    else:
+        result = old_gradient
+    for i, x in enumerate(s + [a]):
+        if result[i, x] == 1:
+            continue
+
+        result[i, x] = 1
+    return result
+
+
 def predict_reward(s, a, W):
-    return np.sum((s + [a]) * W)
+    one_hot_states = one_hot_encoding_state(s, a)
+    # print(W)
+    return np.sum(one_hot_states * W)
 
 
 def predict_action(s, W):
     best_r_predicted = 0
     best_a_predicted = 0
-    for a in range(BIN_MIN[4], BIN_MAX[4]):
+    for a in range(0, RESOLUTION):
         r_predicted = predict_reward(s, a, W)
         if r_predicted > best_r_predicted:
             best_a_predicted = a
@@ -32,7 +47,7 @@ def predict_action(s, W):
 
 
 def random_action():
-    return random.uniform(BIN_MIN[4], BIN_MAX[4])
+    return random.randint(0, RESOLUTION - 1)
 
 
 def encode_states(state):
@@ -60,7 +75,8 @@ BEGIN_STATES = np.array(
         [np.pi / 12, 0, 0, 0],
         [0, 0, -10, 10]],
     dtype=float)
-BEGIN_STATES_COUNT, lparam = BEGIN_STATES.shape
+
+BEGIN_STATES_COUNT = BEGIN_STATES.shape[0]
 
 
 def wahadlo(stan, F):
@@ -129,7 +145,7 @@ def wah_glob():
 
 def save_states():
     Fmax, krokcalk, g, tar, masawoz, masawah, drw = wah_glob()
-    pli = open('../historia.txt', 'w')
+    pli = open('historia.txt', 'w')
     pli.write("Fmax = " + str(Fmax) + "\n")
     pli.write("krokcalk = " + str(krokcalk) + "\n")
     pli.write("g = " + str(g) + "\n")
@@ -147,10 +163,8 @@ def wahadlo_test(state_begin, W):
     step_count = 0
     begin_step_count, lparam = state_begin.shape
     for episode in range(begin_step_count):
-        # nr_stanup = episode
-        # state = state_begin[nr_stanup, :]
-        # TODO: DO zmiany - tymczasowo!!
-        state = BEGIN_STATES[0]
+        state = BEGIN_STATES[episode % BEGIN_STATES_COUNT]
+        # state = BEGIN_STATES[-1]
 
         step = 0
         suma_nagrod_epizodu = 0
@@ -187,8 +201,9 @@ def wahadlo_test(state_begin, W):
 def reward(state):
     kara_za_odchylenie = state[0] ** 2 + 0.25 * state[1] ** 2 + 0.0025 * state[2] ** 2 + 0.0025 * state[3] ** 2
     kara_za_przewrocenie = (abs(state[0]) >= np.pi / 2) * 1000
-    # kara_za_wyjscie = -1000 if abs(state[2]) > BIN_MAX[2] else 0
-    # score = -(kara_za_odchylenie + kara_za_przewrocenie + kara_za_wyjscie)
-    score = -kara_za_odchylenie
+    kara_za_wyjscie = -10 if abs(state[2]) > BIN_MAX[2] else 0
+    # score = kara_za_odchylenie
+    # odchylenie = -abs(state[0])
+    score = kara_za_odchylenie + kara_za_wyjscie
 
     return score

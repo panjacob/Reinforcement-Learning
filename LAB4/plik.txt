@@ -1,0 +1,1 @@
+uzytkownik przylozyl sile = 1000.000000

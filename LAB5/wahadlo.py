@@ -15,25 +15,26 @@ from tqdm import tqdm
 class PrototypesMesh:
     def __init__(self, distance):
         self.W = np.random.rand(FEATURE_COUNT, RESOLUTION)
-        self.max_dist = sqrt(distance)
+        self.max_dist_sqrt = sqrt(distance)
+        self.max_dist = distance
 
     def near(self, s, a):
         x = np.array(s + [a])
         result = []
         for s0 in range(self.W.shape[1]):
-            if s0 - self.max_dist >= x[0] or a + self.max_dist <= x[4]:
+            if s0 - self.max_dist_sqrt >= x[0] or a + self.max_dist_sqrt <= x[4]:
                 continue
             for s1 in range(self.W.shape[1]):
-                if s1 - self.max_dist >= x[1] or a + self.max_dist <= x[4]:
+                if s1 - self.max_dist_sqrt >= x[1] or a + self.max_dist_sqrt <= x[4]:
                     continue
                 for s2 in range(self.W.shape[1]):
-                    if s2 - self.max_dist >= x[2] or a + self.max_dist <= x[4]:
+                    if s2 - self.max_dist_sqrt >= x[2] or a + self.max_dist_sqrt <= x[4]:
                         continue
                     for s3 in range(self.W.shape[1]):
-                        if s3 - self.max_dist >= x[3] or a + self.max_dist <= x[4]:
+                        if s3 - self.max_dist_sqrt >= x[3] or a + self.max_dist_sqrt <= x[4]:
                             continue
                         for a in range(self.W.shape[1]):
-                            if a - self.max_dist >= x[4] or a + self.max_dist <= x[4]:
+                            if a - self.max_dist_sqrt >= x[4] or a + self.max_dist_sqrt <= x[4]:
                                 continue
                             y = np.array([s0, s1, s2, s3, a])
                             dist = np.linalg.norm(x - y)

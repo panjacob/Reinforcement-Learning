@@ -3,7 +3,7 @@ from random import randint
 
 import numpy as np
 
-RESOLUTION = 50
+RESOLUTION = 10
 FEATURE_COUNT = 5
 BIN_MAX = [np.pi / 2, 3, 100, 50, 1000]
 BIN_MIN = [-x for x in BIN_MAX]
@@ -201,7 +201,7 @@ def wahadlo_test(state_begin, W):
 def reward(state):
     kara_za_odchylenie = state[0] ** 2 + 0.25 * state[1] ** 2 + 0.0025 * state[2] ** 2 + 0.0025 * state[3] ** 2
     kara_za_przewrocenie = (abs(state[0]) >= np.pi / 2) * 1000
-    kara_za_wyjscie = -10 if abs(state[2]) > BIN_MAX[2] else 0
+    kara_za_wyjscie = -1 if abs(state[2]) > BIN_MAX[2] else 0
     # score = kara_za_odchylenie
     # odchylenie = -abs(state[0])
     score = kara_za_odchylenie + kara_za_wyjscie

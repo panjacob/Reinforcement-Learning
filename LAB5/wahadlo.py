@@ -65,7 +65,7 @@ class PrototypesMesh:
         return result
 
 
-def wahadlo_uczenie(episode_count=10_00, alpha=0.1, gamma=0.9, epsilon=0.5):
+def wahadlo_uczenie(episode_count=10_000, alpha=0.1, gamma=0.98, epsilon=0.2):
     max_steps = 1000
     mesh = PrototypesMesh(1)
 
@@ -75,6 +75,7 @@ def wahadlo_uczenie(episode_count=10_00, alpha=0.1, gamma=0.9, epsilon=0.5):
             r = reward(state)
             s = encode_states(state)
             a = random_action() if random.random() < epsilon else predict_action(s, mesh.W)
+            # action =
 
             r_hat = predict_reward(s, a, mesh.W)
             state_next = wahadlo(state, a)
@@ -91,7 +92,7 @@ def wahadlo_uczenie(episode_count=10_00, alpha=0.1, gamma=0.9, epsilon=0.5):
 
             if abs(state_next[0]) >= np.pi / 2 or abs(state_next[2]) > BIN_MAX[2]:
                 break
-            alpha = 1 / (len(near_states) + 1)
+            alpha = 1 / ((len(near_states) + 1) * 1)
             mesh.W += alpha * (r + gamma * r_next_hat - r_hat) * gradient
             state = state_next
 

@@ -3,7 +3,7 @@ from random import randint
 
 import numpy as np
 
-RESOLUTION = 50
+RESOLUTION = 100
 FEATURE_COUNT = 5
 BIN_MAX = [np.pi / 2, 3, 100, 50, 1000]
 BIN_MIN = [-x for x in BIN_MAX]

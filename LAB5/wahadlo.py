@@ -15,6 +15,7 @@ from tqdm import tqdm
 class PrototypesMesh:
     def __init__(self, distance):
         self.W = np.random.rand(FEATURE_COUNT, RESOLUTION)
+        # self.W = np.zeros((FEATURE_COUNT, RESOLUTION), dtype=float)
         # self.max_dist_sqrt = sqrt(distance)
         self.max_dist = distance
 
@@ -65,7 +66,7 @@ class PrototypesMesh:
         return result
 
 
-def wahadlo_uczenie(episode_count=10_000, alpha=0.1, gamma=0.98, epsilon=0.2):
+def wahadlo_uczenie(episode_count=10_000, alpha=0.1, gamma=0.7, epsilon=0):
     max_steps = 1000
     mesh = PrototypesMesh(1)
 
@@ -74,31 +75,40 @@ def wahadlo_uczenie(episode_count=10_000, alpha=0.1, gamma=0.98, epsilon=0.2):
         for i in range(max_steps):
             r = reward(state)
             s = encode_states(state)
-            a = random_action() if random.random() < epsilon else predict_action(s, mesh.W)
-            # action =
+            a = random_action() if random.random() < epsilon else predict_action(s, mesh.W, text='now')
+            # print(s, a)
+            action = BINS[4][a]
+            # print(action)
 
             r_hat = predict_reward(s, a, mesh.W)
-            state_next = wahadlo(state, a)
+            state_next = wahadlo(state, action)
             s_next = encode_states(state_next)
-            a_next = predict_action(s_next, mesh.W)
+            a_next = predict_action(s_next, mesh.W, text='next')
             r_next_hat = predict_reward(s_next, a_next, mesh.W)
 
             # gradient = np.zeros((FEATURE_COUNT, RESOLUTION), dtype=float)
             gradient = one_hot_encoding_state(s, a)
-            near_states = mesh.near(s, a)
-
-            for s0, s1, s2, s3, a in near_states:
-                gradient = one_hot_encoding_state([s0, s1, s2, s3], a, gradient)
+            # near_states = mesh.near(s, a)
+            #
+            # for s0, s1, s2, s3, a in near_states:
+            #     gradient = one_hot_encoding_state([s0, s1, s2, s3], a, gradient)
 
             if abs(state_next[0]) >= np.pi / 2 or abs(state_next[2]) > BIN_MAX[2]:
                 break
-            alpha = 1 / ((len(near_states) + 1) * 1)
+            # alpha = 1 / ((len(near_states) + 1) * 1)
             mesh.W += alpha * (r + gamma * r_next_hat - r_hat) * gradient
             state = state_next
 
         if episode % 100 == 0:
             score, steps = wahadlo_test(BEGIN_STATES, mesh.W)
-            print(f"episode: {episode} - score: {score}  steps: {steps}  alpha: {alpha}")
+            print(f"episode: {episode} - score: {score}  steps: {steps}  alpha: {epsilon}")
+
+            if episode > 500:
+                epsilon = 0.8
+            if episode > 1000:
+                epsilon = 0.2
+            if episode > 2000:
+                epsilon = 0.1
 
     print(mesh.W)
     return 0

@@ -1,11 +1,12 @@
 import random
 from random import randint
+from math import pi
 
 import numpy as np
 
-RESOLUTION = 100
+RESOLUTION = 1_000
 FEATURE_COUNT = 5
-BIN_MAX = [np.pi / 2, 3, 100, 50, 1000]
+BIN_MAX = [np.pi / 2, np.pi / 2, 20, 20, 1000]
 BIN_MIN = [-x for x in BIN_MAX]
 BINS = [
     np.linspace(BIN_MIN[0], BIN_MAX[0], num=RESOLUTION),
@@ -22,27 +23,28 @@ def one_hot_encoding_state(s, a, old_gradient=None):
     else:
         result = old_gradient
     for i, x in enumerate(s + [a]):
-        if result[i, x] == 1:
-            continue
-
         result[i, x] = 1
     return result
 
 
-def predict_reward(s, a, W):
-    one_hot_states = one_hot_encoding_state(s, a)
-    # print(W)
-    return np.sum(one_hot_states * W)
+def predict_reward(sx, ax, Wx):
+    one_hot_states = one_hot_encoding_state(sx, ax)
+    result = np.sum(one_hot_states * Wx)
+    return result
 
 
-def predict_action(s, W):
-    best_r_predicted = 0
-    best_a_predicted = 0
-    for a in range(0, RESOLUTION):
-        r_predicted = predict_reward(s, a, W)
+def predict_action(sx, Wx, text='default'):
+    best_r_predicted = -9999999999
+    best_a_predicted = -9999999999
+    for ax in range(0, RESOLUTION):
+        r_predicted = predict_reward(sx, ax, Wx)
         if r_predicted > best_r_predicted:
-            best_a_predicted = a
+            best_a_predicted = ax
+            # print(text, best_a_predicted)
             best_r_predicted = r_predicted
+    # print(text, '->', 'best_action', best_a_predicted, 'best_reward', best_r_predicted, 'state', sx)
+    # one_hot_states = one_hot_encoding_state(sx, best_a_predicted)
+    # result = one_hot_states * Wx
     return best_a_predicted
 
 
@@ -173,9 +175,10 @@ def wahadlo_test(state_begin, W):
             step = step + 1
 
             s = encode_states(state)
-            F = predict_action(s, W)
+            a = predict_action(s, W)
+            action = BINS[4][a]
 
-            nowystan = wahadlo(state, F)
+            nowystan = wahadlo(state, action)
 
             czy_przewrocenie_wahadla = (abs(nowystan[0]) >= np.pi / 2)
             R = reward(nowystan)
@@ -183,7 +186,7 @@ def wahadlo_test(state_begin, W):
 
             file.write(
                 str(episode + 1) + "  " + str(state[0]) + "  " + str(state[1]) + "  " + str(state[2]) + "  " + str(
-                    state[3]) + "  " + str(F) + "\n")
+                    state[3]) + "  " + str(action) + "\n")
 
             state = nowystan
 
@@ -210,9 +213,12 @@ def wahadlo_test(state_begin, W):
 
 
 def reward(state):
-    if abs(state[0]) >= np.pi / 2:
-        R = (abs(state[0]) >= np.pi / 2) * 1000
-        R = -R
-    else:
-        R = 1
-    return R
+    # if abs(state[0]) >= np.pi / 2:
+    #     R = (abs(state[0]) >= np.pi / 2) * 1000
+    #     R = -R
+    # else:
+    #     R = 1
+    # reward_za_wycentrowanie_wozka = (100 - abs(state[2]))**2
+    reward_za_brak_odchylenia = ((np.pi / 2) - abs(state[0])) ** 2
+    total = reward_za_brak_odchylenia
+    return total

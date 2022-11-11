@@ -1,6 +1,6 @@
 import numpy as np
 
-x = np.zeros(5)
-y = np.array([1, 1, 1, 0, 0])
-dist = np.linalg.norm(x - y)
-print(dist, x, y)
+print(np.linspace(-1000, 1000, num=3))
+
+for x in range( 3):
+    print(x)

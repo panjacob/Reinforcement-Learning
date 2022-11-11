@@ -1,4 +1,5 @@
 # from random import random
+import copy
 from math import sqrt
 
 import numpy as np
@@ -14,7 +15,7 @@ from tqdm import tqdm
 
 class PrototypesMesh:
     def __init__(self, distance):
-        self.W = np.random.rand(FEATURE_COUNT, RESOLUTION)
+        self.W = np.random.rand(FEATURE_COUNT, RESOLUTION, RESOLUTION_A)
         # self.W = np.zeros((FEATURE_COUNT, RESOLUTION), dtype=float)
         # self.max_dist_sqrt = sqrt(distance)
         self.max_dist = distance
@@ -65,29 +66,48 @@ class PrototypesMesh:
 
         return result
 
+    def test_all(self):
+        for s0 in range(RESOLUTION):
+            for s1 in range(RESOLUTION):
+                for s2 in range(RESOLUTION):
+                    for s3 in range(RESOLUTION):
+                        # for a in range(RESOLUTION):
+                        a_next, _ = predict_action([s0, s1, s2, s3], self.W)
+                        print(a_next, [s0, s1, s2, s3])
+                        # result.append([s0, s1, s2, s3, a])
 
-def wahadlo_uczenie(episode_count=10_000, alpha=0.1, gamma=0.7, epsilon=0):
+        return None
+
+
+def wahadlo_uczenie(episode_count=50_000, alpha=0.001, gamma=0.998, epsilon=0.9):
     max_steps = 1000
     mesh = PrototypesMesh(1)
+    best_score = -9999999
+    best_W = None
+    best_steps = 0
 
     for episode in range(episode_count):
         state = BEGIN_STATES[episode % BEGIN_STATES_COUNT]
+        # state = BEGIN_STATES
         for i in range(max_steps):
+            mesh.W = mesh.W / np.linalg.norm(mesh.W)
+            # mesh.test_all()
+            # return
+
             r = reward(state)
             s = encode_states(state)
-            a = random_action() if random.random() < epsilon else predict_action(s, mesh.W, text='now')
-            # print(s, a)
+            a, r_hat = random_action(s, mesh.W) if random.random() < epsilon else predict_action(s, mesh.W)
             action = BINS[4][a]
-            # print(action)
 
-            r_hat = predict_reward(s, a, mesh.W)
+            # r_hat = predict_reward(s, a, mesh.W)
             state_next = wahadlo(state, action)
             s_next = encode_states(state_next)
-            a_next = predict_action(s_next, mesh.W, text='next')
-            r_next_hat = predict_reward(s_next, a_next, mesh.W)
+            a_next, r_next_hat = predict_action(s_next, mesh.W)
+            # r_next_hat = predict_reward(s_next, a_next, mesh.W)
 
             # gradient = np.zeros((FEATURE_COUNT, RESOLUTION), dtype=float)
-            gradient = one_hot_encoding_state(s, a)
+            gradient = one_hot_encoding_state(s)
+
             # near_states = mesh.near(s, a)
             #
             # for s0, s1, s2, s3, a in near_states:
@@ -96,21 +116,35 @@ def wahadlo_uczenie(episode_count=10_000, alpha=0.1, gamma=0.7, epsilon=0):
             if abs(state_next[0]) >= np.pi / 2 or abs(state_next[2]) > BIN_MAX[2]:
                 break
             # alpha = 1 / ((len(near_states) + 1) * 1)
-            mesh.W += alpha * (r + gamma * r_next_hat - r_hat) * gradient
+            mesh.W[:, :, a] += alpha * (r + gamma * r_next_hat - r_hat) * gradient
             state = state_next
 
         if episode % 100 == 0:
             score, steps = wahadlo_test(BEGIN_STATES, mesh.W)
-            print(f"episode: {episode} - score: {score}  steps: {steps}  alpha: {epsilon}")
 
-            if episode > 500:
-                epsilon = 0.8
-            if episode > 1000:
-                epsilon = 0.2
-            if episode > 2000:
-                epsilon = 0.1
+            if steps >= best_steps:
+                best_score = score
+                best_steps = steps
+                best_W = copy.deepcopy(mesh.W)
+                prevented = False
+            else:
+                prevented = True
+                mesh.W = best_W
 
-    print(mesh.W)
+            print(
+                f"episode: {episode} - score: {score}  steps: {steps}  best_score:{best_score}  best_steps:{best_steps}  {'Uzywam starych wag' if prevented else ''}")
+            if steps >= 1000:
+                break
+
+            # if episode > 500:
+            #     epsilon = 0.8
+            # if episode > 1000:
+            #     epsilon = 0.2
+            # if episode > 2000:
+            #     epsilon = 0.1
+
+    # print(mesh.W)
+    score, steps = wahadlo_test(BEGIN_STATES, best_W)
     return 0
 
 

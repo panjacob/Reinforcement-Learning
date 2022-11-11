@@ -4,8 +4,9 @@ from math import pi
 
 import numpy as np
 
-RESOLUTION = 1_000
-FEATURE_COUNT = 5
+RESOLUTION = 100
+RESOLUTION_A = 3
+FEATURE_COUNT = 4
 BIN_MAX = [np.pi / 2, np.pi / 2, 20, 20, 1000]
 BIN_MIN = [-x for x in BIN_MAX]
 BINS = [
@@ -13,43 +14,50 @@ BINS = [
     np.linspace(BIN_MIN[1], BIN_MAX[1], num=RESOLUTION),
     np.linspace(BIN_MIN[2], BIN_MAX[2], num=RESOLUTION),
     np.linspace(BIN_MIN[3], BIN_MAX[3], num=RESOLUTION),
-    np.linspace(BIN_MIN[4], BIN_MAX[4], num=RESOLUTION),
+    np.linspace(BIN_MIN[4], BIN_MAX[4], num=RESOLUTION_A),
 ]
 
 
-def one_hot_encoding_state(s, a, old_gradient=None):
+# def one_hot_encoding_state(s, a, old_gradient=None):
+#     if old_gradient is None:
+#         result = np.zeros((FEATURE_COUNT, RESOLUTION), dtype=float)
+#     else:
+#         result = old_gradient
+#     for i, x in enumerate(s + [a]):
+#         result[i, x] = 1
+#     return result
+
+def one_hot_encoding_state(s, old_gradient=None):
     if old_gradient is None:
         result = np.zeros((FEATURE_COUNT, RESOLUTION), dtype=float)
     else:
         result = old_gradient
-    for i, x in enumerate(s + [a]):
+    for i, x in enumerate(s):
         result[i, x] = 1
     return result
 
 
-def predict_reward(sx, ax, Wx):
-    one_hot_states = one_hot_encoding_state(sx, ax)
-    result = np.sum(one_hot_states * Wx)
-    return result
+def predict_reward(s, a, W):
+    one_hot_states = one_hot_encoding_state(s)
+    return np.sum(one_hot_states * W[:, :, a])
 
 
-def predict_action(sx, Wx, text='default'):
-    best_r_predicted = -9999999999
-    best_a_predicted = -9999999999
-    for ax in range(0, RESOLUTION):
-        r_predicted = predict_reward(sx, ax, Wx)
-        if r_predicted > best_r_predicted:
-            best_a_predicted = ax
-            # print(text, best_a_predicted)
-            best_r_predicted = r_predicted
-    # print(text, '->', 'best_action', best_a_predicted, 'best_reward', best_r_predicted, 'state', sx)
-    # one_hot_states = one_hot_encoding_state(sx, best_a_predicted)
-    # result = one_hot_states * Wx
-    return best_a_predicted
+def predict_action(s, W):
+    r_best = -9999999999
+    a_best = -9999999999
+
+    for a in range(RESOLUTION_A):
+        r = predict_reward(s, a, W)
+        if r > r_best:
+            a_best = a
+            r_best = r
+    return a_best, r_best
 
 
-def random_action():
-    return random.randint(0, RESOLUTION - 1)
+def random_action(s, W):
+    a = random.randint(0, RESOLUTION_A - 1)
+    r = predict_reward(s, a, W)
+    return a, r
 
 
 def encode_states(state):
@@ -166,7 +174,7 @@ def wahadlo_test(state_begin, W):
     begin_step_count, lparam = state_begin.shape
     for episode in range(begin_step_count):
         state = BEGIN_STATES[episode % BEGIN_STATES_COUNT]
-        # state = BEGIN_STATES[-1]
+        # state = BEGIN_STATES[0]
 
         step = 0
         suma_nagrod_epizodu = 0
@@ -175,7 +183,7 @@ def wahadlo_test(state_begin, W):
             step = step + 1
 
             s = encode_states(state)
-            a = predict_action(s, W)
+            a, _ = predict_action(s, W)
             action = BINS[4][a]
 
             nowystan = wahadlo(state, action)
@@ -218,7 +226,10 @@ def reward(state):
     #     R = -R
     # else:
     #     R = 1
-    # reward_za_wycentrowanie_wozka = (100 - abs(state[2]))**2
-    reward_za_brak_odchylenia = ((np.pi / 2) - abs(state[0])) ** 2
-    total = reward_za_brak_odchylenia
+    kara_za_upadek = (abs(state[0]) >= np.pi / 2) * -1000
+
+    reward_za_wycentrowanie_wozka = -1000 if abs(state[2]) > 5 else 100
+    # reward_za_wycentrowanie_wozka = 0
+    reward_za_brak_odchylenia = (((np.pi / 2) - abs(state[0])) * 10) ** 3
+    total = reward_za_brak_odchylenia + reward_za_wycentrowanie_wozka + kara_za_upadek
     return total

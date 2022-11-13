@@ -73,7 +73,7 @@ class PrototypesMesh:
         return None
 
 
-def wahadlo_uczenie(episode_count=5_000, alpha=0.001, gamma=0.998, epsilon=0.9):
+def wahadlo_uczenie(episode_count=5_000, alpha=0.001, gamma=0.998, epsilon=0.5):
     max_steps = 1000
     mesh = PrototypesMesh(1)
     best_score = -9999999

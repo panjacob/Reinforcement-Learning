@@ -1,53 +1,63 @@
 import random
 from random import randint
+from math import pi
 
 import numpy as np
 
-RESOLUTION = 100
-FEATURE_COUNT = 5
-BIN_MAX = [np.pi / 2, 3, 100, 50, 1000]
+RESOLUTION = 150
+RESOLUTION_A = 3
+FEATURE_COUNT = 4
+BIN_MAX = [np.pi / 2, np.pi / 2, 50, 80, 1000]
 BIN_MIN = [-x for x in BIN_MAX]
 BINS = [
     np.linspace(BIN_MIN[0], BIN_MAX[0], num=RESOLUTION),
     np.linspace(BIN_MIN[1], BIN_MAX[1], num=RESOLUTION),
     np.linspace(BIN_MIN[2], BIN_MAX[2], num=RESOLUTION),
     np.linspace(BIN_MIN[3], BIN_MAX[3], num=RESOLUTION),
-    np.linspace(BIN_MIN[4], BIN_MAX[4], num=RESOLUTION),
+    np.linspace(BIN_MIN[4], BIN_MAX[4], num=RESOLUTION_A),
 ]
 
 
-def one_hot_encoding_state(s, a, old_gradient=None):
+# def one_hot_encoding_state(s, a, old_gradient=None):
+#     if old_gradient is None:
+#         result = np.zeros((FEATURE_COUNT, RESOLUTION), dtype=float)
+#     else:
+#         result = old_gradient
+#     for i, x in enumerate(s + [a]):
+#         result[i, x] = 1
+#     return result
+
+def one_hot_encoding_state(s, old_gradient=None):
     if old_gradient is None:
         result = np.zeros((FEATURE_COUNT, RESOLUTION), dtype=float)
     else:
         result = old_gradient
-    for i, x in enumerate(s + [a]):
-        if result[i, x] == 1:
-            continue
-
+    for i, x in enumerate(s):
         result[i, x] = 1
     return result
 
 
 def predict_reward(s, a, W):
-    one_hot_states = one_hot_encoding_state(s, a)
-    # print(W)
-    return np.sum(one_hot_states * W)
+    one_hot_states = one_hot_encoding_state(s)
+    return np.sum(one_hot_states * W[:, :, a])
 
 
 def predict_action(s, W):
-    best_r_predicted = 0
-    best_a_predicted = 0
-    for a in range(0, RESOLUTION):
-        r_predicted = predict_reward(s, a, W)
-        if r_predicted > best_r_predicted:
-            best_a_predicted = a
-            best_r_predicted = r_predicted
-    return best_a_predicted
+    r_best = -9999999999
+    a_best = -9999999999
+
+    for a in range(RESOLUTION_A):
+        r = predict_reward(s, a, W)
+        if r > r_best:
+            a_best = a
+            r_best = r
+    return a_best, r_best
 
 
-def random_action():
-    return random.randint(0, RESOLUTION - 1)
+def random_action(s, W):
+    a = random.randint(0, RESOLUTION_A - 1)
+    r = predict_reward(s, a, W)
+    return a, r
 
 
 def encode_states(state):
@@ -164,7 +174,7 @@ def wahadlo_test(state_begin, W):
     begin_step_count, lparam = state_begin.shape
     for episode in range(begin_step_count):
         state = BEGIN_STATES[episode % BEGIN_STATES_COUNT]
-        # state = BEGIN_STATES[-1]
+        # state = BEGIN_STATES[0]
 
         step = 0
         suma_nagrod_epizodu = 0
@@ -173,9 +183,10 @@ def wahadlo_test(state_begin, W):
             step = step + 1
 
             s = encode_states(state)
-            F = predict_action(s, W)
+            a, _ = predict_action(s, W)
+            action = BINS[4][a]
 
-            nowystan = wahadlo(state, F)
+            nowystan = wahadlo(state, action)
 
             czy_przewrocenie_wahadla = (abs(nowystan[0]) >= np.pi / 2)
             R = reward(nowystan)
@@ -183,7 +194,7 @@ def wahadlo_test(state_begin, W):
 
             file.write(
                 str(episode + 1) + "  " + str(state[0]) + "  " + str(state[1]) + "  " + str(state[2]) + "  " + str(
-                    state[3]) + "  " + str(F) + "\n")
+                    state[3]) + "  " + str(action) + "\n")
 
             state = nowystan
 
@@ -198,12 +209,30 @@ def wahadlo_test(state_begin, W):
     return reward_sum, step_count / begin_step_count
 
 
-def reward(state):
-    kara_za_odchylenie = state[0] ** 2 + 0.25 * state[1] ** 2 + 0.0025 * state[2] ** 2 + 0.0025 * state[3] ** 2
-    kara_za_przewrocenie = (abs(state[0]) >= np.pi / 2) * 1000
-    kara_za_wyjscie = -1 if abs(state[2]) > BIN_MAX[2] else 0
-    # score = kara_za_odchylenie
-    # odchylenie = -abs(state[0])
-    score = kara_za_odchylenie + kara_za_wyjscie
+# def reward(state):
+#     kara_za_odchylenie = state[0] ** 2 + 0.25 * state[1] ** 2 + 0.0025 * state[2] ** 2 + 0.0025 * state[3] ** 2
+#     kara_za_przewrocenie = (abs(state[0]) >= np.pi / 2) * 1000
+#     kara_za_wyjscie = -100 if abs(state[2]) > BIN_MAX[2] else 0
+#     # score = kara_za_odchylenie
+#     # odchylenie = -abs(state[0])
+#     score = kara_za_odchylenie + kara_za_wyjscie
+#
+#     return score
 
-    return score
+
+def reward(state):
+    # if abs(state[0]) >= np.pi / 2:
+    #     R = (abs(state[0]) >= np.pi / 2) * 1000
+    #     R = -R
+    # else:
+    #     R = 1
+    kara_za_upadek = (abs(state[0]) >= np.pi / 2) * -1000
+
+    # normalized_center_r = 100 / (np.pi / 2)
+
+    # reward_za_wycentrowanie_wozka = (abs(state[2]) > 50) * (50 - abs(state[2]))
+    reward_za_wycentrowanie_wozka = 0
+
+    reward_za_brak_odchylenia = ((np.pi / 2) - abs(state[0])) ** 3
+    total = reward_za_brak_odchylenia + reward_za_wycentrowanie_wozka + kara_za_upadek
+    return total

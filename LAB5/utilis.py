@@ -4,10 +4,10 @@ from math import pi
 
 import numpy as np
 
-RESOLUTION = 150
+RESOLUTION = 100
 RESOLUTION_A = 3
 FEATURE_COUNT = 4
-BIN_MAX = [np.pi / 2, np.pi / 2, 50, 80, 1000]
+BIN_MAX = [np.pi / 2, np.pi / 2, 20, 20, 1000]
 BIN_MIN = [-x for x in BIN_MAX]
 BINS = [
     np.linspace(BIN_MIN[0], BIN_MAX[0], num=RESOLUTION),
@@ -230,7 +230,8 @@ def reward(state):
 
     # normalized_center_r = 100 / (np.pi / 2)
 
-    reward_za_wycentrowanie_wozka = (abs(state[2]) > 50) * (50 - abs(state[2])) * 10
+    # reward_za_wycentrowanie_wozka = (abs(state[2]) > 50) * (50 - abs(state[2]))
+    reward_za_wycentrowanie_wozka = 0
 
     reward_za_brak_odchylenia = ((np.pi / 2) - abs(state[0])) ** 3
     total = reward_za_brak_odchylenia + reward_za_wycentrowanie_wozka + kara_za_upadek
